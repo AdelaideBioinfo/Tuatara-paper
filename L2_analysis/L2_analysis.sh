@@ -93,6 +93,7 @@ tr -d " \t" < L2_tree.afa.gb > L2_tree.afa.gbHalf.afa
 # Build tree
 fasttree -nt < L2_tree.afa.gbHalf.afa > gblock_L2_tree
 
+
 #------------------------------------------#
 #### 2c) Analysis of L2 based on the RT domain
 #------------------------------------------#
@@ -115,11 +116,63 @@ fasttree -nt < combined_L2_RT_domain.afa.gbHalf.afa > gblock_L2_RT_domain_tree
 
 
 #------------------------------------------#
-#### 2d) L2 divergence rate
+#### 2d) Possible horizontal transfer between tuatara and platypus
 #------------------------------------------#
 
-# Rename full-length tuatara L2 into platypus-like (HT)/non-platypus-like (non-HT) manually based on the tuatara L2 tree build in step 1,
-# Saved into file called L2.cons.fa
+# Separate tuatara L2 into platypus-like (HT)/non-platypus-like (non-HT) based on the tree build from step 1, which results to 22 HT L2 and 33 non-HT L2.
+
+# run CENSOR against five reptile genomes (anole, crocodile, alligator, turtle and bearded dragon) and one monotreme genome (platypus)
+# $1 represents the specie name
+cd censor_ht
+censor -bprm cpus=16 -lib ht.L2.fa $1.genome.fa
+
+cd censor_nonht
+censor -bprm cpus=16 -lib nonht.L2.fa $1.genome.fa
+
+# Extract nucleotide sequences from CENSOR hits respectively
+# platypus-like L2 
+for i in *.map;
+do
+    echo $i
+    awk '{if(($3-$2+1)>50) print $0}' $i > $i.use
+    awk '{$1 "\t" $2 "\t" $3}' $i.use > L2.ht.$i.bed
+done
+
+fastaFromBed -fi ../$1.genome.fa -bed L2.ht.$1.bed -fo L2.ht.$1.fa
+
+# non-platypus-like L2
+for i in *.map;
+do
+    echo $i
+    awk '{if(($3-$2+1)>50) print $0}' $i > $i.use
+    awk '{$1 "\t" $2 "\t" $3}' $i.use > L2.nonht.$i.bed
+done
+
+fastaFromBed -fi ../$1.genome.fa -bed L2.nonht.$1.bed -fo L2.nonht.$1.fa
+
+# Merge hits from same species
+cat L2.ht.$1.fa L2.nonht.$1.fa > L2.ht-nonht.$1.fa
+
+# Run BLASTN against the platypus-like tuatara L2 and non-platypus like tuatara L2 consensus sequences
+# Hits smaller than 50bp were discarded
+cat ht.L2.fa nonht.L2.fa > L2.cons.fa
+
+blastn -subject L2.ht-nonht.$1.fa -query L2.cons.fa -outfmt 6 -out blastn.L2.ht-nonht.$1
+
+# Remove the short coordinates from BLASTN outputs
+for i in blastn.*; 
+do
+   echo $i
+   awk '{if(($4)>50) print}' $i > large_$i
+   sort -k2,2  -k11,11n  large_$i | sort -u -k2,2 --merge > best.$i
+   grep 'nonht' best.$i > nonht.best.$i
+   sed '/nonht/d' best.$i > ht.best.$i
+done
+
+
+#------------------------------------------#
+#### 2e) L2 divergence rate
+#------------------------------------------#
 
 # Calculate divergence rate of platypus-like L2 tuatara elements and non-platypus-like L2 tuatara elements
 RepeatMasker -pa 16 -a -nolow -lib L2.cons.fa tuatara_30Sep2015_rUdWx.fasta

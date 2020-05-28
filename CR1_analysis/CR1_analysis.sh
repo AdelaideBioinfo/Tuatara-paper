@@ -45,7 +45,7 @@ fasttree -nt < CR1_tree.afa.gbHalf.afa > gblock_CR1_tree
 
 
 #------------------------------------------#
-#### 3b) Analysis of tuatara CR1 based on th RT domain
+#### 3b) Analysis of tuatara CR1 based on the RT domain
 #------------------------------------------#
 
 # merge all full-length CR1 from six species we generated from 
@@ -69,7 +69,7 @@ fasttree -nt < combined_CR1_RT_domain.afa.gbHalf.afa > gblock_CR1_RT_domain_tree
 #### 3c) CR1 divergence rate
 #------------------------------------------#
 # Calculate the divergence rate of different CR1 types in the tuatara genome
-RepeatMasker -pa 16 -a -nolow -xsmall -gccalc -html -excln -dir ./ -lib tua_V3.lib.fa.CR1 tuatara_30Sep2015_rUdWx.fasta
+RepeatMasker -pa 32 -a -nolow -xsmall -gccalc -html -excln -dir ./ -lib tua_V3.lib.fa.CR1 tuatara_30Sep2015_rUdWx.fasta
 perl ~/RepeatMasker/util/calcDivergenceFromAlign_test.pl -noCpG tuatara_30Sep2015_rUdWx.fasta.align > tuatara_30Sep2015_rUdWx.fasta.align.noCpG     
 perl RM.addsize.div.pl tuatara_30Sep2015_rUdWx.fasta.align.noCpG > tuatara_30Sep2015_rUdWx.fasta.align.noCpG.size
 
